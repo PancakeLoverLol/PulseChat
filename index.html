@@ -1,174 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PulseChat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>PulseChat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Sleepy Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600&display=swap" rel="stylesheet">
+<!-- Sleepy Font -->
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600&display=swap" rel="stylesheet">
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCabbEyslAZXuo8DLo41pE8GMW_u-3OvJw",
-      authDomain: "pulsechat-49573.firebaseapp.com",
-      databaseURL: "https://pulsechat-49573-default-rtdb.firebaseio.com",
-      projectId: "pulsechat-49573",
-      storageBucket: "pulsechat-49573.firebasestorage.app",
-      messagingSenderId: "1095042955002",
-      appId: "1:1095042955002:web:3b8fa9843d8d3d000bfb43",
-      measurementId: "G-LDQTDKRJQR"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyCabbEyslAZXuo8DLo41pE8GMW_u-3OvJw",
+  authDomain: "pulsechat-49573.firebaseapp.com",
+  databaseURL: "https://pulsechat-49573-default-rtdb.firebaseio.com",
+  projectId: "pulsechat-49573",
+  storageBucket: "pulsechat-49573.firebasestorage.app",
+  messagingSenderId: "1095042955002",
+  appId: "1:1095042955002:web:3b8fa9843d8d3d000bfb43",
+  measurementId: "G-LDQTDKRJQR"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const chatRef = ref(db, "messages");
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const chatRef = ref(db, "messages");
 
-    // Persistent username system
-    const adjectives = ["dreamer", "star", "ghost", "comet", "echo", "pulse", "night", "mist"];
-    let username = localStorage.getItem("pulsechat_username");
-    if (!username) {
-      username = adjectives[Math.floor(Math.random() * adjectives.length)] + "_" + Math.floor(Math.random() * 1000);
-      localStorage.setItem("pulsechat_username", username);
-    }
+// Persistent username
+const adjectives = ["dreamer", "star", "ghost", "comet", "echo", "pulse", "night", "mist"];
+let username = localStorage.getItem("pulsechat_username");
+if (!username) {
+  username = adjectives[Math.floor(Math.random() * adjectives.length)] + "_" + Math.floor(Math.random() * 1000);
+  localStorage.setItem("pulsechat_username", username);
+}
 
-    // Censor system
-    const badWords = ["fuck", "shit", "bitch", "asshole", "nigger", "faggot"];
-    function censor(text) {
-      let lowered = text;
-      badWords.forEach(word => {
-        let stars = "*".repeat(word.length);
-        let regex = new RegExp(word, "gi");
-        lowered = lowered.replace(regex, stars);
-      });
-      return lowered;
-    }
+// Censor system
+const badWords = ["fuck", "shit", "bitch", "asshole", "nigger", "faggot"];
+function censor(text) {
+  let lowered = text;
+  badWords.forEach(word => {
+    let stars = "*".repeat(word.length);
+    let regex = new RegExp(word, "gi");
+    lowered = lowered.replace(regex, stars);
+  });
+  return lowered;
+}
 
-    // Send message
-    window.sendMessage = function() {
-      const input = document.getElementById("msg");
-      const text = input.value.trim();
-      if (text) {
-        push(chatRef, { user: username, message: censor(text) });
-        input.value = "";
-        const music = document.getElementById("bg-music");
-        if (music.paused) music.play();
-      }
-    };
+// Send message
+window.sendMessage = function() {
+  const input = document.getElementById("msg");
+  const text = input.value.trim();
+  if (text) {
+    push(chatRef, { user: username, message: censor(text) });
+    input.value = "";
+    // Play music on first interaction
+    if (music.paused) music.play().catch(() => {});
+  }
+};
 
-    // Display messages
-    onChildAdded(chatRef, (data) => {
-      const chat = document.getElementById("chat");
-      const msg = document.createElement("div");
-      msg.className = "message";
-      msg.innerHTML = `<strong>${data.val().user}:</strong> ${data.val().message}`;
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-    });
-  </script>
+// Display messages
+onChildAdded(chatRef, (data) => {
+  const chat = document.getElementById("chat");
+  const msg = document.createElement("div");
+  msg.className = "message";
+  msg.innerHTML = `<strong>${data.val().user}:</strong> ${data.val().message}`;
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+});
 
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Comfortaa', cursive;
-      background: #331480;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
+// Music toggle
+window.toggleMusic = function() {
+  if (music.paused) {
+    music.play().catch(() => {});
+    document.getElementById("mute-btn").textContent = "Mute";
+  } else {
+    music.pause();
+    document.getElementById("mute-btn").textContent = "Unmute";
+  }
+};
 
-    /* Star background */
-    body::before, body::after {
-      content: "";
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: transparent url("https://www.transparenttextures.com/patterns/stardust.png") repeat;
-      animation: twinkle 10s infinite;
-      z-index: 0;
-    }
+// Start music on first interaction
+const music = document.getElementById("bg-music");
+function startMusic() {
+  music.play().catch(() => {});
+  document.body.removeEventListener("click", startMusic);
+  document.body.removeEventListener("keydown", startMusic);
+}
+document.body.addEventListener("click", startMusic);
+document.body.addEventListener("keydown", startMusic);
+</script>
 
-    @keyframes twinkle {
-      0% {opacity: 0.6;}
-      50% {opacity: 1;}
-      100% {opacity: 0.6;}
-    }
+<style>
+body {
+  margin: 0;
+  font-family: 'Comfortaa', cursive;
+  background: #331480;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
 
-    header {
-      padding: 10px;
-      text-align: center;
-      font-size: 1.5em;
-      font-weight: 600;
-      background: rgba(0,0,0,0.3);
-      z-index: 1;
-    }
+/* Star background */
+body::before, body::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: transparent url("https://www.transparenttextures.com/patterns/stardust.png") repeat;
+  animation: twinkle 10s infinite;
+  z-index: 0;
+}
 
-    #chat {
-      flex: 1;
-      padding: 10px;
-      overflow-y: auto;
-      z-index: 1;
-    }
+@keyframes twinkle {
+  0% {opacity: 0.6;}
+  50% {opacity: 1;}
+  100% {opacity: 0.6;}
+}
 
-    .message {
-      margin: 5px 0;
-      padding: 8px 12px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-    }
+header {
+  padding: 10px;
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: 600;
+  background: rgba(0,0,0,0.3);
+  z-index: 1;
+}
 
-    footer {
-      display: flex;
-      padding: 10px;
-      background: rgba(0,0,0,0.3);
-      z-index: 1;
-    }
+#chat {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  z-index: 1;
+}
 
-    input {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 10px;
-      outline: none;
-      font-family: 'Comfortaa', cursive;
-    }
+.message {
+  margin: 5px 0;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+}
 
-    button {
-      margin-left: 10px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      background: #5e3bb0;
-      color: white;
-      font-family: 'Comfortaa', cursive;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
+footer {
+  display: flex;
+  padding: 10px;
+  background: rgba(0,0,0,0.3);
+  z-index: 1;
+}
 
-    button:hover {
-      background: #7c54e0;
-    }
+input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  outline: none;
+  font-family: 'Comfortaa', cursive;
+}
 
-    audio {
-      display: none;
-    }
-  </style>
+button {
+  margin-left: 10px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #5e3bb0;
+  color: white;
+  font-family: 'Comfortaa', cursive;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: #7c54e0;
+}
+
+audio {
+  display: none;
+}
+</style>
 </head>
 <body>
-  <header>✨ PulseChat ✨</header>
-  <div id="chat"></div>
-  <footer>
-    <input type="text" id="msg" placeholder="Type a dreamy message..." onkeydown="if(event.key==='Enter')sendMessage()">
-    <button onclick="sendMessage()">Send</button>
-  </footer>
-  <audio id="bg-music" loop>
-    <source src="https://files.catbox.moe/q2p1ye.mp3" type="audio/mp3">
-  </audio>
+<header>✨ PulseChat ✨</header>
+<div id="chat"></div>
+<footer>
+  <input type="text" id="msg" placeholder="Type a dreamy message..." onkeydown="if(event.key==='Enter')sendMessage()">
+  <button onclick="sendMessage()">Send</button>
+  <button id="mute-btn" onclick="toggleMusic()">Mute</button>
+</footer>
+
+<audio id="bg-music" loop>
+  <source src="https://files.catbox.moe/q2p1ye.mp3" type="audio/mp3">
+</audio>
 </body>
 </html>
