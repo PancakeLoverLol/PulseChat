@@ -53,11 +53,10 @@
       const input = document.getElementById("msg");
       const text = input.value.trim();
       if (text) {
-        push(chatRef, {
-          user: username,
-          message: censor(text)
-        });
+        push(chatRef, { user: username, message: censor(text) });
         input.value = "";
+        const music = document.getElementById("bg-music");
+        if (music.paused) music.play();
       }
     };
 
@@ -168,8 +167,8 @@
     <input type="text" id="msg" placeholder="Type a dreamy message..." onkeydown="if(event.key==='Enter')sendMessage()">
     <button onclick="sendMessage()">Send</button>
   </footer>
-  <audio autoplay loop>
-    <source src="https://files.catbox.moe/0z41iq.wav" type="audio/wav">
+  <audio id="bg-music" loop>
+    <source src="https://files.catbox.moe/q2p1ye.mp3" type="audio/mp3">
   </audio>
 </body>
 </html>
